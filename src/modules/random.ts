@@ -14,8 +14,8 @@ export default function() {
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const SIZE = 50;
-  const grid = [10, 10];
+  const SIZE = 100;
+  const grid = [5, 5];
   const drawTriangle = (x: number, y: number) => {
     ctx.beginPath();
     ctx.moveTo(x, y);
