@@ -14,13 +14,14 @@ export default function() {
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const SIZE = 100;
-  const grid = [5, 5];
+  const SIZE = 50;
+  const grid = [10, 10];
   const drawTriangle = (x: number, y: number) => {
     ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + SIZE, y);
+    const isInvert = Math.random() > 0.5;
+    isInvert ? ctx.moveTo(x + SIZE, y + SIZE) : ctx.moveTo(x, y);
     ctx.lineTo(x, y + SIZE);
+    ctx.lineTo(x + SIZE, y);
     ctx.fill();
     ctx.closePath();
   };
