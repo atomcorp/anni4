@@ -4,17 +4,30 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Anni 4</title>
+    <style>
+      label {
+        display: block;
+      }
+    </style>
   </head>
   <body>
     <canvas id="canvas" width="500" height="500"></canvas>
     <div>
+      <label>Seed: </label>
+      <input id="seed" type="text" value="random seed" maxlength="16" />
+    </div>
+    <div>
       <label>
         <input type="radio" name="choice" value="simple" />
-        Simple
+        Right-angle triangles uniform
       </label>
       <label>
         <input type="radio" name="choice" value="random" />
-        Random
+        Random right-angle triangles
+      </label>
+      <label>
+        <input type="radio" name="choice" value="tr-II" />
+        TR II, 1970 - Vertical triangles (isocelene)
       </label>
     </div>
     <script src="app.bundle.js" type="module"></script>

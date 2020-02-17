@@ -1,3 +1,5 @@
+import returnSeed from "./helpers/returnSeed";
+
 const returnMatrix = (horizontalLength, verticalLength, callback) => {
   Array(verticalLength)
     .fill(null)
@@ -16,9 +18,10 @@ export default function() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const SIZE = 50;
   const grid = [10, 10];
+  const seed = returnSeed();
   const drawTriangle = (x: number, y: number) => {
     ctx.beginPath();
-    const isInvert = Math.random() > 0.5;
+    const isInvert = Math.round(seed / parseInt(`${x}${y}`)) % 2 === 0;
     isInvert ? ctx.moveTo(x + SIZE, y + SIZE) : ctx.moveTo(x, y);
     ctx.lineTo(x, y + SIZE);
     ctx.lineTo(x + SIZE, y);
