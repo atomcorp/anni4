@@ -11,7 +11,11 @@ const returnSeed = (): number => {
 };
 
 export const seedBool = (seed: number, x: number, y: number) => {
-  return Math.round(seed / parseInt(`${x}${y}`)) % 2 === 0;
+  return (
+    Math.round(seed / parseInt(`${x}${y}`) / (parseInt(`${x}${y}`) / seed)) %
+      2 ===
+    0
+  );
 };
 
 export default returnSeed;
