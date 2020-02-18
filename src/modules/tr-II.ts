@@ -10,8 +10,6 @@ const NW = "1000"; // north west
 const NE = "0100"; // north east
 const SE = "0010"; // south east
 const SW = "0001"; // south west
-const ARROW_UP = "0011";
-const ARROW_DN = "1100";
 const SIZE = {
   HEIGHT: 50,
   WIDTH: 50
@@ -19,8 +17,6 @@ const SIZE = {
 const grid = { horizontal: 10, vertical: 10 };
 
 type shapeType = "0000" | "1000" | "0100" | "0010" | "0001" | "0011" | "1100";
-
-const shapeLottery: shapeType[] = ["0000", "1000", "0100", "0010", "0001"];
 
 const drawShape = (
   ctx: CanvasRenderingContext2D
@@ -63,21 +59,22 @@ const drawShape = (
   ctx.closePath();
 };
 
-const seedRemainder = (seed: number, x: number, y: number) => {
+const shapeFromSeed = (
+  seed: number,
+  x: number,
+  y: number,
+  shapesLength: number
+) => {
   return (
-    Math.round(seed / parseInt(`${x}${y}`) / (parseInt(`${x}${y}`) / seed)) % 5
+    Math.round(
+      seed /
+        parseInt(`${x + 3}${y + 8}`) /
+        (parseInt(`${x + 2}${y + 5}`) / seed)
+    ) % shapesLength
   );
 };
 
-const handleRowPlacement = () => {
-  // rules
-  // 1. a triangle is never broken up, not start or end
-  // 2. the chance of a having a blank depends on the row
-  //    some rows can have 1 blank, others can have 6
-  //    therefore in each row there are a finite amount of blanks
-  // 3. a diamond can never be formed
-  // the width of a triangle must be "two", a gap can be "one"
-};
+const smooth = () => {};
 
 export default function() {
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -86,31 +83,89 @@ export default function() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const seed = returnSeed();
   const drawShapeWithCtx = drawShape(ctx);
-  const drawUpTriangle = (x, y) => {
-    // ctx.moveTo(x, y + SIZE.HEIGHT);
-    // ctx.lineTo(x + SIZE.WIDTH, y + SIZE.HEIGHT);
-    // ctx.lineTo(x + SIZE.WIDTH, y);
-  };
-  const drawDownTriangle = (x, y) => {
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + SIZE.WIDTH, y);
-    ctx.lineTo(x, y + SIZE.WIDTH);
-  };
-  const drawTriangle = (x: number, y: number) => {
-    // ctx.beginPath();
-    const shape = shapeLottery[seedRemainder(seed, x, y)];
-    drawShapeWithCtx(x, y, shape);
-    // isInvert ? ctx.lineTo(x, y + SIZE) : ctx.lineTo(x, y);
-    // ctx.fill();
-    // ctx.closePath();
+
+  // const matrix: [shapeType[]] = [[]];
+  const returnShape = (
+    horizontalIndex: number,
+    verticalIndex: number,
+    previousShape: shapeType | null,
+    aboveShape: shapeType | null
+  ): shapeType => {
+    // rules?
+    // 1. a triangle is never broken up, not start or end
+    // 2. the chance of a having a blank depends on the row
+    //    some rows can have 1 blank, others can have 6
+    //    therefore in each row there are a finite amount of blanks
+    // 3. a diamond can never be formed
+    // the width of a triangle must be "two", a gap can be "one"
+    // how?
+    // 1. get an array of all available shapes
+    // 2. check conditions, if not allowed remove from list
+    //    or, just return the only available option
+    // 3. whatever is use seed to get random shape
+    // create a new row
+    let shapes: shapeType[] = [BLANK, NW, NE, SE, SW];
+    // are there any shapes to the left
+    if (previousShape != null) {
+      // must form triangles
+      // shape to the left is NE or SE, next must be NW or SW
+      if (previousShape === NE) {
+        return NW;
+      } else if (previousShape === SE) {
+        return SW;
+      }
+    }
+    // are there any shapes above
+    if (aboveShape != null) {
+      // don't form triangles, remove any shapes that can form them
+      if (aboveShape === SE) {
+        shapes = shapes.filter(shape => shape !== NE);
+      }
+      if (aboveShape === SW) {
+        shapes = shapes.filter(shape => shape !== NW);
+      }
+    }
+
+    // if last in row, stop incomplete triangles
+    return shapes[
+      shapeFromSeed(seed, horizontalIndex, verticalIndex, shapes.length - 1)
+    ];
   };
 
-  ctx.beginPath();
+  // drawShapeWithCtx(x, y, shape);
+
+  const matrix: [shapeType[]] = Array(grid.vertical)
+    .fill(null)
+    .reduce((rows, _, verticalIndex) => {
+      return [
+        ...rows,
+        Array(grid.horizontal)
+          .fill(null)
+          .reduce((cells, _, horizontalIndex) => {
+            const previousShape =
+              horizontalIndex > 0 ? cells[horizontalIndex - 1] : null;
+            const aboveShape =
+              verticalIndex > 0 ? rows[verticalIndex - 1] : null;
+            return [
+              ...cells,
+              returnShape(
+                horizontalIndex,
+                verticalIndex,
+                previousShape,
+                aboveShape
+              )
+            ];
+          }, [])
+      ];
+    }, []);
+
   returnMatrix(
     grid.horizontal,
     grid.vertical,
     (verticalIndex, horizontalIndex) => {
-      drawTriangle(horizontalIndex * SIZE.WIDTH, verticalIndex * SIZE.HEIGHT);
+      const x = horizontalIndex * SIZE.WIDTH;
+      const y = verticalIndex * SIZE.HEIGHT;
+      drawShapeWithCtx(x, y, matrix[verticalIndex][horizontalIndex]);
     }
   );
 }
