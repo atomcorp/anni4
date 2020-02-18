@@ -5,18 +5,18 @@ const bkg = "#04b27a";
 const clrone = "#bbc5b4";
 const clrtwo = "#80948f";
 
-const BLANK = "0000"; // void
-const NW = "1000"; // north west
-const NE = "0100"; // north east
-const SE = "0010"; // south east
-const SW = "0001"; // south west
+const BLANK = "BLANK"; // void
+const NW = "NW"; // north west
+const NE = "NE"; // north east
+const SE = "SE"; // south east
+const SW = "SW"; // south west
 const SIZE = {
   HEIGHT: 50,
   WIDTH: 50
 };
 const grid = { horizontal: 10, vertical: 10 };
 
-type shapeType = "0000" | "1000" | "0100" | "0010" | "0001" | "0011" | "1100";
+type shapeType = "BLANK" | "NW" | "NE" | "SE" | "SW";
 
 const drawShape = (
   ctx: CanvasRenderingContext2D
@@ -74,8 +74,6 @@ const shapeFromSeed = (
   );
 };
 
-const smooth = () => {};
-
 export default function() {
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
   canvas.style.backgroundColor = bkg;
@@ -88,8 +86,7 @@ export default function() {
   const returnShape = (
     horizontalIndex: number,
     verticalIndex: number,
-    previousShape: shapeType | null,
-    aboveShape: shapeType | null
+    currentGrid
   ): shapeType => {
     // rules?
     // 1. a triangle is never broken up, not start or end
@@ -104,7 +101,21 @@ export default function() {
     //    or, just return the only available option
     // 3. whatever is use seed to get random shape
     // create a new row
-    let shapes: shapeType[] = [BLANK, NW, NE, SE, SW];
+    const previousShape =
+      horizontalIndex > 0
+        ? currentGrid[verticalIndex][horizontalIndex - 1]
+        : null;
+    const aboveShape =
+      verticalIndex > 0
+        ? currentGrid[verticalIndex - 1][horizontalIndex]
+        : null;
+    // the shape to the ne of the current position
+    const aboveNextShape =
+      horizontalIndex < grid.horizontal - 1 && verticalIndex > 0
+        ? currentGrid[verticalIndex - 1][horizontalIndex + 1]
+        : null;
+    // double NE & SE so they appear more frequently
+    let shapes: shapeType[] = [BLANK, NE, SE];
     // are there any shapes to the left
     if (previousShape != null) {
       // must form triangles
@@ -115,20 +126,24 @@ export default function() {
         return SW;
       }
     }
-    // are there any shapes above
-    if (aboveShape != null) {
-      // don't form triangles, remove any shapes that can form them
-      if (aboveShape === SE) {
-        shapes = shapes.filter(shape => shape !== NE);
-      }
-      if (aboveShape === SW) {
-        shapes = shapes.filter(shape => shape !== NW);
-      }
+    // are there any shapes above that break the rules?
+    if (
+      aboveNextShape === SE ||
+      aboveNextShape === SW ||
+      aboveShape === SE ||
+      aboveShape === SW
+    ) {
+      shapes = shapes.filter(shape => shape !== NE);
+    } else {
+      // we remove a lot of NE, so lets inject some back in
+      shapes = [NE, ...shapes, NE];
     }
-
     // if last in row, stop incomplete triangles
+    if (horizontalIndex === grid.horizontal - 1) {
+      shapes = shapes.filter(shape => shape !== NE && shape !== SE);
+    }
     return shapes[
-      shapeFromSeed(seed, horizontalIndex, verticalIndex, shapes.length - 1)
+      shapeFromSeed(seed, horizontalIndex, verticalIndex, shapes.length)
     ];
   };
 
@@ -142,18 +157,9 @@ export default function() {
         Array(grid.horizontal)
           .fill(null)
           .reduce((cells, _, horizontalIndex) => {
-            const previousShape =
-              horizontalIndex > 0 ? cells[horizontalIndex - 1] : null;
-            const aboveShape =
-              verticalIndex > 0 ? rows[verticalIndex - 1] : null;
             return [
               ...cells,
-              returnShape(
-                horizontalIndex,
-                verticalIndex,
-                previousShape,
-                aboveShape
-              )
+              returnShape(horizontalIndex, verticalIndex, [...rows, cells])
             ];
           }, [])
       ];
