@@ -15,51 +15,64 @@ const SIZE = {
   WIDTH: 50
 };
 const grid = { horizontal: 10, vertical: 10 };
-
+const colors: shapeColorType[] = [clrone, clrtwo];
 type shapeType = "BLANK" | "NW" | "NE" | "SE" | "SW";
+type clroneType = "#bbc5b4";
+type clrtwoType = "#80948f";
+type shapeColorType = clroneType | clrtwoType;
+type shapeObjType = {
+  type: shapeType;
+  color: shapeColorType;
+};
+
+const rank = {
+  up: 0,
+  down: 0,
+  blank: 0
+};
 
 const drawShape = (
   ctx: CanvasRenderingContext2D
-): ((x: number, y: number, shape: shapeType) => void) => (
+): ((x: number, y: number, shape: shapeObjType) => void) => (
   x: number,
   y: number,
   shape
 ) => {
   ctx.beginPath();
-  switch (shape) {
+  switch (shape.type) {
     case NW:
       ctx.moveTo(x, y);
       ctx.lineTo(x + SIZE.WIDTH, y);
       ctx.lineTo(x, y + SIZE.WIDTH);
-      ctx.fillStyle = clrone;
       break;
     case NE:
       ctx.moveTo(x, y);
       ctx.lineTo(x + SIZE.WIDTH, y);
       ctx.lineTo(x + SIZE.WIDTH, y + SIZE.HEIGHT);
-      ctx.fillStyle = clrone;
+      ++rank.down;
       break;
     case SE:
       ctx.moveTo(x, y + SIZE.HEIGHT);
       ctx.lineTo(x + SIZE.WIDTH, y + SIZE.HEIGHT);
       ctx.lineTo(x + SIZE.WIDTH, y);
-      ctx.fillStyle = clrtwo;
       break;
     case SW:
       ctx.moveTo(x, y + SIZE.HEIGHT);
       ctx.lineTo(x + SIZE.HEIGHT, y + SIZE.HEIGHT);
       ctx.lineTo(x, y);
-      ctx.fillStyle = clrtwo;
+      ++rank.up;
       break;
     case BLANK:
+      ++rank.blank;
     default:
       break;
   }
+  ctx.fillStyle = shape.color;
   ctx.fill();
   ctx.closePath();
 };
 
-const shapeFromSeed = (
+const intFromSeed = (
   seed: number,
   x: number,
   y: number,
@@ -81,13 +94,16 @@ export default function() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const seed = returnSeed();
   const drawShapeWithCtx = drawShape(ctx);
+  rank.up = 0;
+  rank.down = 0;
+  rank.blank = 0;
 
   // const matrix: [shapeType[]] = [[]];
   const returnShape = (
     horizontalIndex: number,
     verticalIndex: number,
     currentGrid
-  ): shapeType => {
+  ): shapeObjType => {
     // rules?
     // 1. a triangle is never broken up, not start or end
     // 2. the chance of a having a blank depends on the row
@@ -101,54 +117,66 @@ export default function() {
     //    or, just return the only available option
     // 3. whatever is use seed to get random shape
     // create a new row
-    const previousShape =
+    const previousShape: shapeObjType | null =
       horizontalIndex > 0
         ? currentGrid[verticalIndex][horizontalIndex - 1]
         : null;
-    const aboveShape =
+    const aboveShape: shapeObjType | null =
       verticalIndex > 0
         ? currentGrid[verticalIndex - 1][horizontalIndex]
         : null;
     // the shape to the ne of the current position
-    const aboveNextShape =
+    const aboveNextShape: shapeObjType | null =
       horizontalIndex < grid.horizontal - 1 && verticalIndex > 0
         ? currentGrid[verticalIndex - 1][horizontalIndex + 1]
         : null;
     // double NE & SE so they appear more frequently
-    let shapes: shapeType[] = [BLANK, NE, SE];
+    let shapesPool: shapeType[] = [BLANK, NE, SE, NE, SE];
     // are there any shapes to the left
     if (previousShape != null) {
       // must form triangles
       // shape to the left is NE or SE, next must be NW or SW
-      if (previousShape === NE) {
-        return NW;
-      } else if (previousShape === SE) {
-        return SW;
+      if (previousShape.type === NE) {
+        return {
+          type: NW,
+          color: previousShape.color
+        };
+      } else if (previousShape.type === SE) {
+        return {
+          type: SW,
+          color: previousShape.color
+        };
       }
     }
     // are there any shapes above that break the rules?
-    if (
-      aboveNextShape === SE ||
-      aboveNextShape === SW ||
-      aboveShape === SE ||
-      aboveShape === SW
-    ) {
-      shapes = shapes.filter(shape => shape !== NE);
-    } else {
-      // we remove a lot of NE, so lets inject some back in
-      shapes = [NE, ...shapes, NE];
+    if (aboveNextShape != null) {
+      if (
+        aboveNextShape.type === SE ||
+        aboveNextShape.type === SW ||
+        aboveShape.type === SE ||
+        aboveShape.type === SW
+      ) {
+        shapesPool = shapesPool.filter(shape => shape !== NE);
+      } else {
+        // we remove a lot of NE, so lets inject some back in
+        shapesPool = [NE, ...shapesPool, NE];
+      }
     }
     // if last in row, stop incomplete triangles
     if (horizontalIndex === grid.horizontal - 1) {
-      shapes = shapes.filter(shape => shape !== NE && shape !== SE);
+      shapesPool = shapesPool.filter(shape => shape !== NE && shape !== SE);
     }
-    return shapes[
-      shapeFromSeed(seed, horizontalIndex, verticalIndex, shapes.length)
-    ];
+    return {
+      type:
+        shapesPool[
+          intFromSeed(seed, horizontalIndex, verticalIndex, shapesPool.length)
+        ],
+      color:
+        colors[intFromSeed(seed, horizontalIndex, verticalIndex, colors.length)]
+    };
   };
 
-  // drawShapeWithCtx(x, y, shape);
-
+  // this creates
   const matrix: [shapeType[]] = Array(grid.vertical)
     .fill(null)
     .reduce((rows, _, verticalIndex) => {
@@ -157,21 +185,18 @@ export default function() {
         Array(grid.horizontal)
           .fill(null)
           .reduce((cells, _, horizontalIndex) => {
-            return [
-              ...cells,
-              returnShape(horizontalIndex, verticalIndex, [...rows, cells])
-            ];
+            const x = horizontalIndex * SIZE.WIDTH;
+            const y = verticalIndex * SIZE.HEIGHT;
+            const shape = returnShape(horizontalIndex, verticalIndex, [
+              ...rows,
+              cells
+            ]);
+            // draw the shape on canvas
+            drawShapeWithCtx(x, y, shape);
+            // keep logging the matrix
+            return [...cells, shape];
           }, [])
       ];
     }, []);
-
-  returnMatrix(
-    grid.horizontal,
-    grid.vertical,
-    (verticalIndex, horizontalIndex) => {
-      const x = horizontalIndex * SIZE.WIDTH;
-      const y = verticalIndex * SIZE.HEIGHT;
-      drawShapeWithCtx(x, y, matrix[verticalIndex][horizontalIndex]);
-    }
-  );
+  console.log(rank);
 }
