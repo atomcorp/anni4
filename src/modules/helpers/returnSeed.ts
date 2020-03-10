@@ -4,10 +4,10 @@ const returnSeed = (): number => {
   const input = document.getElementById("seed") as HTMLInputElement;
   if (input.value.length > 3) {
     const seed = new seedrandom(input.value);
-    return seed.int32();
+    return seed();
   }
   const seed = new seedrandom();
-  return seed.int32();
+  return seed();
 };
 
 export const seedBool = (seed: number, x: number, y: number) => {

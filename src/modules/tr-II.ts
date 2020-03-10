@@ -1,5 +1,8 @@
 import returnMatrix from "./helpers/returnMatrix";
 import returnSeed from "./helpers/returnSeed";
+import seededShuffle from "seededshuffle";
+
+// (222 * 9301 + 49297) % 233280;
 
 const bkg = "#04b27a";
 const clrone = "#bbc5b4";
@@ -22,8 +25,9 @@ type clrtwoType = "#80948f";
 type shapeColorType = clroneType | clrtwoType;
 type shapeObjType = {
   type: shapeType;
-  color: shapeColorType;
+  color?: shapeColorType;
 };
+type matrixType = shapeObjType[][];
 
 const rank = {
   up: 0,
@@ -39,11 +43,13 @@ const drawShape = (
   shape
 ) => {
   ctx.beginPath();
+
   switch (shape.type) {
     case NW:
       ctx.moveTo(x, y);
       ctx.lineTo(x + SIZE.WIDTH, y);
       ctx.lineTo(x, y + SIZE.WIDTH);
+      ++rank.down;
       break;
     case NE:
       ctx.moveTo(x, y);
@@ -55,6 +61,7 @@ const drawShape = (
       ctx.moveTo(x, y + SIZE.HEIGHT);
       ctx.lineTo(x + SIZE.WIDTH, y + SIZE.HEIGHT);
       ctx.lineTo(x + SIZE.WIDTH, y);
+      ++rank.up;
       break;
     case SW:
       ctx.moveTo(x, y + SIZE.HEIGHT);
@@ -68,23 +75,21 @@ const drawShape = (
       break;
   }
   ctx.fillStyle = shape.color;
+
   ctx.fill();
   ctx.closePath();
 };
 
 const intFromSeed = (
-  seed: number,
-  x: number,
+  seed: number, // float 0-1
+  x: number, // int
   y: number,
-  shapesLength: number
+  maximum: number
 ) => {
-  return (
-    Math.round(
-      seed /
-        parseInt(`${x + 3}${y + 8}`) /
-        (parseInt(`${x + 2}${y + 5}`) / seed)
-    ) % shapesLength
-  );
+  // this basically tries to make a predictable Math.random()
+  const prng1 = ((parseInt(`${x + 3}${y + 8}`) * seed) % 100) / 100;
+  const prng2 = ((parseInt(`${x + 2}${y + 5}`) * seed) % 100) / 100;
+  return Math.floor(((prng1 + prng2) / 2) * maximum);
 };
 
 export default function() {
@@ -98,7 +103,32 @@ export default function() {
   rank.down = 0;
   rank.blank = 0;
 
-  // const matrix: [shapeType[]] = [[]];
+  const generateShapePool = (): shapeType[] => {
+    // get maximum number of cells (width * height)
+    const maximumSize = grid.horizontal * grid.vertical;
+    const blanksSize = intFromSeed(seed, 5, 8, 12) + 4;
+    // add random number of blanks - 4-11%
+    const maxiumSizeAfterBlanks = maximumSize - blanksSize;
+    // const maximumUps =
+    //   Math.round(maxiumSizeAfterBlanks / 2) - intFromSeed(seed, 3, 4, 5);
+    // const maximumDowns =
+    //   Math.round(maxiumSizeAfterBlanks / 2) - intFromSeed(seed, 7, 2, 5);
+    const shapePool = Array(maximumSize)
+      .fill(null)
+      .map((_, i) => {
+        if (i <= maxiumSizeAfterBlanks / 2) {
+          return NE;
+        }
+        if (i <= maxiumSizeAfterBlanks) {
+          return SE;
+        }
+        return BLANK;
+      });
+    return seededShuffle.shuffle(shapePool, seed);
+  };
+
+  const shapePool = generateShapePool();
+
   const returnShape = (
     horizontalIndex: number,
     verticalIndex: number,
@@ -106,9 +136,7 @@ export default function() {
   ): shapeObjType => {
     // rules?
     // 1. a triangle is never broken up, not start or end
-    // 2. the chance of a having a blank depends on the row
-    //    some rows can have 1 blank, others can have 6
-    //    therefore in each row there are a finite amount of blanks
+    // 2. An up or down triangle can be either colour
     // 3. a diamond can never be formed
     // the width of a triangle must be "two", a gap can be "one"
     // how?
@@ -131,7 +159,7 @@ export default function() {
         ? currentGrid[verticalIndex - 1][horizontalIndex + 1]
         : null;
     // double NE & SE so they appear more frequently
-    let shapesPool: shapeType[] = [BLANK, NE, SE, NE, SE];
+    let shapesPoolClone: shapeType[] = shapePool;
     // are there any shapes to the left
     if (previousShape != null) {
       // must form triangles
@@ -149,35 +177,114 @@ export default function() {
       }
     }
     // are there any shapes above that break the rules?
-    if (aboveNextShape != null) {
-      if (
-        aboveNextShape.type === SE ||
-        aboveNextShape.type === SW ||
-        aboveShape.type === SE ||
-        aboveShape.type === SW
-      ) {
-        shapesPool = shapesPool.filter(shape => shape !== NE);
-      } else {
-        // we remove a lot of NE, so lets inject some back in
-        shapesPool = [NE, ...shapesPool, NE];
-      }
-    }
+
     // if last in row, stop incomplete triangles
     if (horizontalIndex === grid.horizontal - 1) {
-      shapesPool = shapesPool.filter(shape => shape !== NE && shape !== SE);
+      shapesPoolClone = shapesPoolClone.filter(
+        shape => shape !== NE && shape !== SE
+      );
     }
+    const index = horizontalIndex + verticalIndex * grid.horizontal;
+    const difference = shapePool.length - shapesPoolClone.length;
     return {
-      type:
-        shapesPool[
-          intFromSeed(seed, horizontalIndex, verticalIndex, shapesPool.length)
-        ],
+      type: shapesPoolClone[Math.abs(index - difference)],
       color:
         colors[intFromSeed(seed, horizontalIndex, verticalIndex, colors.length)]
     };
   };
 
-  // this creates
-  const matrix: [shapeType[]] = Array(grid.vertical)
+  const smooth = (matrix: matrixType): matrixType => {
+    return matrix.reduce((newMatrix, row, verticalIndex) => {
+      newMatrix[verticalIndex] = matrix[verticalIndex].map(
+        (shape, horizontalIndex) => {
+          const previousShape: shapeObjType | null =
+            horizontalIndex > 0
+              ? newMatrix[verticalIndex][horizontalIndex - 1]
+              : null;
+          const aboveNextShape: shapeObjType | null =
+            horizontalIndex < grid.horizontal && verticalIndex > 0
+              ? newMatrix[verticalIndex - 1][horizontalIndex + 1]
+              : null;
+          const aboveShape: shapeObjType | null =
+            verticalIndex > 0
+              ? newMatrix[verticalIndex - 1][horizontalIndex]
+              : null;
+          const belowShape: shapeObjType | null =
+            verticalIndex + 1 < grid.vertical
+              ? matrix[verticalIndex + 1][horizontalIndex]
+              : null;
+          const belowNextShape: shapeObjType | null =
+            verticalIndex + 1 < grid.vertical &&
+            horizontalIndex + 1 < grid.horizontal
+              ? matrix[verticalIndex + 1][horizontalIndex + 1]
+              : null;
+          if (aboveShape != null) {
+            // a diamond
+            if (aboveShape.type === SE && shape.type === NE) {
+              // flip it, if possible
+              if (
+                (belowShape && belowShape.type === SW) ||
+                (belowShape &&
+                  belowShape.type === BLANK &&
+                  belowNextShape &&
+                  belowNextShape.type !== NE)
+              ) {
+                return {
+                  type: SE,
+                  color: shape.color
+                };
+              }
+              return {
+                type: BLANK
+              };
+            }
+          }
+          if (previousShape != null) {
+            // must form triangles
+            // shape to the left is NE or SE, next must be NW or SW
+            if (previousShape.type === NE) {
+              return {
+                type: NW,
+                color: previousShape.color
+              };
+            }
+            if (previousShape.type === SE) {
+              return {
+                type: SW,
+                color: previousShape.color
+              };
+            }
+            // stop leaving random right angles
+            if (
+              previousShape.type === BLANK &&
+              (shape.type === NW || shape.type === SW)
+            ) {
+              return {
+                type: BLANK
+              };
+            }
+          }
+
+          return shape;
+        }
+      );
+      return newMatrix;
+    }, matrix);
+  };
+
+  const draw = (matrix: matrixType) => {
+    matrix.forEach((rows, verticalIndex) => {
+      rows.forEach((shape, horizontalIndex) => {
+        const x = horizontalIndex * SIZE.WIDTH;
+        const y = verticalIndex * SIZE.HEIGHT;
+        // draw the shape on canvas
+        drawShapeWithCtx(x, y, shape);
+      });
+    });
+  };
+
+  // this creates the 2d array containing the shapes
+  const matrix: matrixType = Array(grid.vertical)
     .fill(null)
     .reduce((rows, _, verticalIndex) => {
       return [
@@ -185,18 +292,14 @@ export default function() {
         Array(grid.horizontal)
           .fill(null)
           .reduce((cells, _, horizontalIndex) => {
-            const x = horizontalIndex * SIZE.WIDTH;
-            const y = verticalIndex * SIZE.HEIGHT;
             const shape = returnShape(horizontalIndex, verticalIndex, [
               ...rows,
               cells
             ]);
-            // draw the shape on canvas
-            drawShapeWithCtx(x, y, shape);
-            // keep logging the matrix
             return [...cells, shape];
           }, [])
       ];
     }, []);
-  console.log(rank);
+
+  draw(smooth(smooth(matrix)));
 }

@@ -3975,6 +3975,11 @@ schema-utils@^1.0.0:
     ajv-errors "^1.0.0"
     ajv-keywords "^3.1.0"
 
+seededshuffle@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/seededshuffle/-/seededshuffle-0.2.0.tgz#f0df7eb606e1a339d3c64e1c85ae4755d1b051a9"
+  integrity sha512-PHDs2DFmQjhrrpCryB3NJfzfQmNO3cYrgxsrMSESnI8tVU08VTxzHmK5atsNukvJKsRE4ro1UfBtBbKz7TeJsQ==
+
 seedrandom@^3.0.5:
   version "3.0.5"
   resolved "https://registry.yarnpkg.com/seedrandom/-/seedrandom-3.0.5.tgz#54edc85c95222525b0c7a6f6b3543d8e0b3aa0a7"
