@@ -92,6 +92,32 @@ const intFromSeed = (
   return Math.floor(((prng1 + prng2) / 2) * maximum);
 };
 
+const neighbourShapes = (matrix, horizontalIndex, verticalIndex) => {
+  const previousShape: shapeObjType | null =
+    horizontalIndex > 0 ? matrix[verticalIndex][horizontalIndex - 1] : null;
+  const aboveNextShape: shapeObjType | null =
+    horizontalIndex < grid.horizontal && verticalIndex > 0
+      ? matrix[verticalIndex - 1][horizontalIndex + 1]
+      : null;
+  const aboveShape: shapeObjType | null =
+    verticalIndex > 0 ? matrix[verticalIndex - 1][horizontalIndex] : null;
+  const belowShape: shapeObjType | null =
+    verticalIndex + 1 < grid.vertical
+      ? matrix[verticalIndex + 1][horizontalIndex]
+      : null;
+  const belowNextShape: shapeObjType | null =
+    verticalIndex + 1 < grid.vertical && horizontalIndex + 1 < grid.horizontal
+      ? matrix[verticalIndex + 1][horizontalIndex + 1]
+      : null;
+  return {
+    previousShape,
+    aboveNextShape,
+    aboveShape,
+    belowShape,
+    belowNextShape
+  };
+};
+
 export default function() {
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
   canvas.style.backgroundColor = bkg;
@@ -194,82 +220,69 @@ export default function() {
   };
 
   const smooth = (matrix: matrixType): matrixType => {
-    return matrix.reduce((newMatrix, row, verticalIndex) => {
-      newMatrix[verticalIndex] = matrix[verticalIndex].map(
-        (shape, horizontalIndex) => {
-          const previousShape: shapeObjType | null =
-            horizontalIndex > 0
-              ? newMatrix[verticalIndex][horizontalIndex - 1]
-              : null;
-          const aboveNextShape: shapeObjType | null =
-            horizontalIndex < grid.horizontal && verticalIndex > 0
-              ? newMatrix[verticalIndex - 1][horizontalIndex + 1]
-              : null;
-          const aboveShape: shapeObjType | null =
-            verticalIndex > 0
-              ? newMatrix[verticalIndex - 1][horizontalIndex]
-              : null;
-          const belowShape: shapeObjType | null =
-            verticalIndex + 1 < grid.vertical
-              ? matrix[verticalIndex + 1][horizontalIndex]
-              : null;
-          const belowNextShape: shapeObjType | null =
-            verticalIndex + 1 < grid.vertical &&
-            horizontalIndex + 1 < grid.horizontal
-              ? matrix[verticalIndex + 1][horizontalIndex + 1]
-              : null;
-          if (aboveShape != null) {
-            // a diamond
-            if (aboveShape.type === SE && shape.type === NE) {
-              // flip it, if possible
-              if (
-                (belowShape && belowShape.type === SW) ||
-                (belowShape &&
-                  belowShape.type === BLANK &&
-                  belowNextShape &&
-                  belowNextShape.type !== NE)
-              ) {
-                return {
-                  type: SE,
-                  color: shape.color
-                };
-              }
-              return {
-                type: BLANK
-              };
-            }
-          }
-          if (previousShape != null) {
-            // must form triangles
-            // shape to the left is NE or SE, next must be NW or SW
-            if (previousShape.type === NE) {
-              return {
-                type: NW,
-                color: previousShape.color
-              };
-            }
-            if (previousShape.type === SE) {
-              return {
-                type: SW,
-                color: previousShape.color
-              };
-            }
-            // stop leaving random right angles
+    const mutatableMatrix = matrix;
+    mutatableMatrix.forEach((row, verticalIndex) => {
+      mutatableMatrix[verticalIndex].forEach((shape, horizontalIndex) => {
+        const {
+          previousShape,
+          aboveShape,
+          belowShape,
+          belowNextShape
+        } = neighbourShapes(mutatableMatrix, horizontalIndex, verticalIndex);
+        if (aboveShape != null) {
+          // a diamond
+          if (aboveShape.type === SE && shape.type === NE) {
+            // flip it, if possible
             if (
-              previousShape.type === BLANK &&
-              (shape.type === NW || shape.type === SW)
+              (belowShape && belowShape.type === SW) ||
+              (belowShape &&
+                belowShape.type === BLANK &&
+                belowNextShape &&
+                belowNextShape.type !== NE)
             ) {
-              return {
-                type: BLANK
+              mutatableMatrix[verticalIndex][horizontalIndex] = {
+                type: SE,
+                color: shape.color
               };
+              return;
             }
+            mutatableMatrix[verticalIndex][horizontalIndex] = {
+              type: BLANK
+            };
+            return;
           }
-
-          return shape;
         }
-      );
-      return newMatrix;
-    }, matrix);
+        if (previousShape != null) {
+          // must form triangles
+          // shape to the left is NE or SE, next must be NW or SW
+          if (previousShape.type === NE) {
+            mutatableMatrix[verticalIndex][horizontalIndex] = {
+              type: NW,
+              color: previousShape.color
+            };
+            return;
+          }
+          if (previousShape.type === SE) {
+            mutatableMatrix[verticalIndex][horizontalIndex] = {
+              type: SW,
+              color: previousShape.color
+            };
+            return;
+          }
+          // stop leaving random right angles
+          if (
+            previousShape.type === BLANK &&
+            (shape.type === NW || shape.type === SW)
+          ) {
+            mutatableMatrix[verticalIndex][horizontalIndex] = {
+              type: BLANK
+            };
+            return;
+          }
+        }
+      });
+    });
+    return mutatableMatrix;
   };
 
   const draw = (matrix: matrixType) => {
@@ -301,5 +314,5 @@ export default function() {
       ];
     }, []);
 
-  draw(smooth(smooth(matrix)));
+  draw(smooth(matrix));
 }
