@@ -21,7 +21,7 @@ export default function() {
   const seed = returnSeed();
   const drawTriangle = (x: number, y: number) => {
     ctx.beginPath();
-    const isInvert = Math.round(seed / parseInt(`${x}${y}`)) % 2 === 0;
+    const isInvert = Math.round(seed * parseInt(`${x}${y}`)) % 2 === 0;
     isInvert ? ctx.moveTo(x + SIZE, y + SIZE) : ctx.moveTo(x, y);
     ctx.lineTo(x, y + SIZE);
     ctx.lineTo(x + SIZE, y);
