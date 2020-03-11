@@ -1,9 +1,10 @@
 import simple from "./modules/simple";
 import random from "./modules/random";
 import trII from "./modules/tr-II";
+import grII from "./modules/gr-II";
 
 (() => {
-  trII();
+  grII();
   document.addEventListener("change", e => {
     const target = e.target as HTMLInputElement;
     if (target.name === "choice") {
@@ -15,6 +16,9 @@ import trII from "./modules/tr-II";
       }
       if (target.value === "tr-II") {
         trII();
+      }
+      if (target.value === "gr-II") {
+        grII();
       }
     }
   });
