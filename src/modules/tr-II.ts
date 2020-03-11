@@ -14,10 +14,10 @@ const NE = "NE"; // north east
 const SE = "SE"; // south east
 const SW = "SW"; // south west
 const SIZE = {
-  HEIGHT: 50,
-  WIDTH: 50
+  HEIGHT: 25,
+  WIDTH: 25
 };
-const grid = { horizontal: 10, vertical: 10 };
+const grid = { horizontal: 20, vertical: 20 };
 const colors: shapeColorType[] = [clrone, clrtwo];
 type shapeType = "BLANK" | "NW" | "NE" | "SE" | "SW";
 type clroneType = "#bbc5b4";
@@ -96,7 +96,7 @@ const neighbourShapes = (matrix, horizontalIndex, verticalIndex) => {
   const previousShape: shapeObjType | null =
     horizontalIndex > 0 ? matrix[verticalIndex][horizontalIndex - 1] : null;
   const aboveNextShape: shapeObjType | null =
-    horizontalIndex < grid.horizontal && verticalIndex > 0
+    horizontalIndex + 1 < grid.horizontal && verticalIndex > 0
       ? matrix[verticalIndex - 1][horizontalIndex + 1]
       : null;
   const aboveShape: shapeObjType | null =
@@ -109,12 +109,17 @@ const neighbourShapes = (matrix, horizontalIndex, verticalIndex) => {
     verticalIndex + 1 < grid.vertical && horizontalIndex + 1 < grid.horizontal
       ? matrix[verticalIndex + 1][horizontalIndex + 1]
       : null;
+  const nextShape: shapeObjType | null =
+    horizontalIndex + 1 < grid.horizontal
+      ? matrix[verticalIndex][horizontalIndex + 1]
+      : null;
   return {
     previousShape,
     aboveNextShape,
     aboveShape,
     belowShape,
-    belowNextShape
+    belowNextShape,
+    nextShape
   };
 };
 
@@ -132,7 +137,7 @@ export default function() {
   const generateShapePool = (): shapeType[] => {
     // get maximum number of cells (width * height)
     const maximumSize = grid.horizontal * grid.vertical;
-    const blanksSize = intFromSeed(seed, 5, 8, 12) + 4;
+    const blanksSize = intFromSeed(seed, 5, 8, maximumSize * 0.12) + 4;
     // add random number of blanks - 4-11%
     const maxiumSizeAfterBlanks = maximumSize - blanksSize;
     // const maximumUps =
@@ -227,18 +232,17 @@ export default function() {
           previousShape,
           aboveShape,
           belowShape,
-          belowNextShape
+          belowNextShape,
+          nextShape,
+          aboveNextShape
         } = neighbourShapes(mutatableMatrix, horizontalIndex, verticalIndex);
         if (aboveShape != null) {
           // a diamond
           if (aboveShape.type === SE && shape.type === NE) {
             // flip it, if possible
             if (
-              (belowShape && belowShape.type === SW) ||
-              (belowShape &&
-                belowShape.type === BLANK &&
-                belowNextShape &&
-                belowNextShape.type !== NE)
+              belowShape?.type === SW ||
+              (belowShape?.type === BLANK && belowNextShape?.type !== NE)
             ) {
               mutatableMatrix[verticalIndex][horizontalIndex] = {
                 type: SE,
@@ -247,6 +251,31 @@ export default function() {
               return;
             }
             mutatableMatrix[verticalIndex][horizontalIndex] = {
+              type: BLANK
+            };
+            return;
+          }
+          // is kissing starter
+          if (aboveShape.type === SW && shape.type === NE) {
+            // flip it, if possible
+            if (belowShape?.type !== NE && belowShape?.type !== NW) {
+              mutatableMatrix[verticalIndex][horizontalIndex] = {
+                type: SE,
+                color: shape.color
+              };
+              return;
+            }
+            mutatableMatrix[verticalIndex][horizontalIndex] = {
+              type: BLANK
+            };
+            return;
+          }
+          // is kissing ender
+          if (aboveShape.type === SE && shape.type === NW) {
+            mutatableMatrix[verticalIndex][horizontalIndex] = {
+              type: BLANK
+            };
+            mutatableMatrix[verticalIndex][horizontalIndex - 1] = {
               type: BLANK
             };
             return;
@@ -278,6 +307,37 @@ export default function() {
               type: BLANK
             };
             return;
+          }
+        }
+        // console.log(nextShape);
+        // 2 squares is blank, try and fill
+        if (shape.type === BLANK && nextShape?.type === BLANK) {
+          console.log(shape);
+          // try and even the triangles up if possible
+          if (rank.down < rank.up) {
+            if (
+              aboveShape?.type !== SE &&
+              aboveShape?.type !== SW &&
+              aboveNextShape?.type !== SE
+            ) {
+              mutatableMatrix[verticalIndex][horizontalIndex] = {
+                type: NE,
+                color: shape.color
+              };
+              return;
+            }
+          } else {
+            if (
+              belowShape?.type !== NE &&
+              belowShape?.type !== NW &&
+              belowNextShape?.type !== NE
+            ) {
+              mutatableMatrix[verticalIndex][horizontalIndex] = {
+                type: SE,
+                color: shape.color
+              };
+              return;
+            }
           }
         }
       });
@@ -314,5 +374,6 @@ export default function() {
       ];
     }, []);
 
-  draw(smooth(matrix));
+  draw(smooth(smooth(matrix)));
+  console.log(rank);
 }
