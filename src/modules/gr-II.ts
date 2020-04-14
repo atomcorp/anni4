@@ -7,23 +7,36 @@ import returnSeed from "./helpers/returnSeed";
  * 4. can't use same chevron in neighbor square
  */
 // types
-type shapeType = "BLANK" | "N" | "E" | "S" | "W";
+type shapeType = "N" | "E" | "S" | "W";
 type shapeObjType = {
   type: shapeType;
   color?: string;
 };
+type matrixType = shapeObjType[][];
 // consts
 const BLANK = "BLANK";
 const N = "N";
 const E = "E";
 const S = "S";
 const W = "W";
+const seed = returnSeed();
 // settings
 const settings = {
   red: "#9b3b1b",
   blue: "#2b4990",
-  width: [50, 50], // width, height
-  grid: [10, 10] // horizontal, vertical
+  size: [50, 50], // width, height
+  grid: [16, 16], // horizontal, vertical
+};
+
+const intFromSeed = (
+  x: number, // int
+  y: number,
+  maximum: number
+) => {
+  // this basically tries to make a predictable Math.random()
+  const prng1 = ((parseInt(`${x * 33}${y * 84}`) * seed) % 100) / 100;
+  const prng2 = ((parseInt(`${x * 29}${y * 51}`) * seed) % 100) / 100;
+  return Math.floor(((prng1 + prng2) / 2) * maximum);
 };
 
 const drawChevrons = (
@@ -72,7 +85,6 @@ const drawChevrons = (
       ctx.lineTo(x + HEIGHT, y + HEIGHT);
       ctx.lineTo(x + HEIGHT / 2, y + HEIGHT);
       break;
-    case BLANK:
     default:
       break;
   }
@@ -82,35 +94,87 @@ const drawChevrons = (
   ctx.closePath();
 };
 
+const shapeType = (
+  horizontalIndex: number,
+  verticalIndex: number,
+  currentGrid: shapeType[][]
+) => {
+  let availableShapes: shapeType[] = [N, E, S, W];
+  const previousShape =
+    horizontalIndex > 0
+      ? currentGrid[verticalIndex][horizontalIndex - 1]
+      : null;
+  const aboveShape =
+    verticalIndex > 0 ? currentGrid[verticalIndex - 1][horizontalIndex] : null;
+  if (previousShape != null) {
+    availableShapes = availableShapes.filter(
+      (availableShape) => availableShape !== previousShape
+    );
+  }
+  if (aboveShape != null) {
+    availableShapes = availableShapes.filter(
+      (availableShape) => availableShape !== aboveShape
+    );
+  }
+  return availableShapes[
+    intFromSeed(horizontalIndex, verticalIndex, availableShapes.length)
+  ];
+};
+
+const returnColourFromCoords = (x: number, y: number) => {
+  if (
+    (x >= settings.grid[0] / 2 && y < settings.grid[1] / 2) ||
+    (x < settings.grid[0] / 2 && y >= settings.grid[1] / 2)
+  ) {
+    return settings.blue;
+  }
+  return settings.red;
+};
+
+const draw = (matrix: matrixType, drawShapeWithCtx) => {
+  matrix.forEach((rows, verticalIndex) => {
+    rows.forEach((shape, horizontalIndex) => {
+      const x = horizontalIndex * settings.size[0];
+      const y = verticalIndex * settings.size[1];
+      // draw the shape on canvas
+      drawShapeWithCtx(x, y, {
+        type: shape,
+        color: returnColourFromCoords(horizontalIndex, verticalIndex),
+      });
+    });
+  });
+};
+
 const init = () => {
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+  canvas.width = 800;
+  canvas.height = 800;
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
   const drawShapeWithCtx = drawChevrons(
     ctx,
-    settings.width[0],
-    settings.width[1]
+    settings.size[0],
+    settings.size[1]
   );
-  const x = 0 * settings.width[0];
-  const y = 0 * settings.width[1];
-  // draw the shape on canvas
-  drawShapeWithCtx(x, y, {
-    type: "N",
-    color: settings.blue
-  });
-  drawShapeWithCtx(1 * settings.width[0], 0 * settings.width[1], {
-    type: "E",
-    color: settings.blue
-  });
-  drawShapeWithCtx(2 * settings.width[0], 0 * settings.width[1], {
-    type: "S",
-    color: settings.red
-  });
-  drawShapeWithCtx(3 * settings.width[0], 0 * settings.width[1], {
-    type: "W",
-    color: settings.red
-  });
+
+  const matrix: matrixType = Array(settings.grid[1])
+    .fill(null)
+    .reduce((rows, _, verticalIndex) => {
+      return [
+        ...rows,
+        Array(settings.grid[0])
+          .fill(null)
+          .reduce((cells, _, horizontalIndex) => {
+            const shape = shapeType(horizontalIndex, verticalIndex, [
+              ...rows,
+              cells,
+            ]);
+            return [...cells, shape];
+          }, []),
+      ];
+    }, []);
+
+  draw(matrix, drawShapeWithCtx);
 };
 
 export default init;

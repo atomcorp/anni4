@@ -120,6 +120,8 @@ const neighbourShapes = (matrix, horizontalIndex, verticalIndex) => {
 
 export default function() {
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+  canvas.width = 500;
+  canvas.height = 500;
   canvas.style.backgroundColor = bkg;
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -154,7 +156,7 @@ export default function() {
   const returnShape = (
     horizontalIndex: number,
     verticalIndex: number,
-    currentGrid
+    currentGrid: matrixType
   ): shapeObjType => {
     // rules?
     // 1. a triangle is never broken up, not start or end
