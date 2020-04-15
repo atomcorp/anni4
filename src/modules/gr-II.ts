@@ -5,6 +5,7 @@ import returnSeed from "./helpers/returnSeed";
  * 2. point up, down, left, right
  * 3. broken into 4 quarters, colours are opposite in adjacent sectors
  * 4. can't use same chevron in neighbor square
+ * 5. each square alternates between either up/down or left/right
  */
 // types
 type shapeType = "N" | "E" | "S" | "W";
@@ -100,6 +101,8 @@ const shapeType = (
   currentGrid: shapeType[][]
 ) => {
   let availableShapes: shapeType[] = [N, E, S, W];
+  const verts: shapeType[] = [N, S];
+  const horiz: shapeType[] = [W,E];
   const previousShape =
     horizontalIndex > 0
       ? currentGrid[verticalIndex][horizontalIndex - 1]
@@ -107,14 +110,9 @@ const shapeType = (
   const aboveShape =
     verticalIndex > 0 ? currentGrid[verticalIndex - 1][horizontalIndex] : null;
   if (previousShape != null) {
-    availableShapes = availableShapes.filter(
-      (availableShape) => availableShape !== previousShape
-    );
-  }
-  if (aboveShape != null) {
-    availableShapes = availableShapes.filter(
-      (availableShape) => availableShape !== aboveShape
-    );
+    availableShapes = verts.includes(previousShape) ? horiz : verts;
+  } else if (aboveShape != null) {
+    availableShapes = verts.includes(aboveShape) ? horiz : verts;
   }
   return availableShapes[
     intFromSeed(horizontalIndex, verticalIndex, availableShapes.length)

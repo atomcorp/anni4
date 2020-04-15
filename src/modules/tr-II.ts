@@ -17,7 +17,7 @@ const SIZE = {
   HEIGHT: 25,
   WIDTH: 25
 };
-const grid = { horizontal: 20, vertical: 20 };
+const grid = { horizontal: 40, vertical: 40 };
 const colors: shapeColorType[] = [clrone, clrtwo];
 type shapeType = "BLANK" | "NW" | "NE" | "SE" | "SW";
 type clroneType = "#bbc5b4";
@@ -120,8 +120,8 @@ const neighbourShapes = (matrix, horizontalIndex, verticalIndex) => {
 
 export default function() {
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-  canvas.width = 500;
-  canvas.height = 500;
+  canvas.width = 1000;
+  canvas.height = 1000;
   canvas.style.backgroundColor = bkg;
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
