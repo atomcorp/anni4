@@ -13,7 +13,7 @@ type shapeObjType = {
   type: shapeType;
   color?: string;
 };
-type matrixType = shapeObjType[][];
+type matrixType = shapeType[][];
 // consts
 const BLANK = "BLANK";
 const N = "N";
@@ -102,7 +102,7 @@ const shapeType = (
 ) => {
   let availableShapes: shapeType[] = [N, E, S, W];
   const verts: shapeType[] = [N, S];
-  const horiz: shapeType[] = [W,E];
+  const horiz: shapeType[] = [W, E];
   const previousShape =
     horizontalIndex > 0
       ? currentGrid[verticalIndex][horizontalIndex - 1]
@@ -129,7 +129,10 @@ const returnColourFromCoords = (x: number, y: number) => {
   return settings.red;
 };
 
-const draw = (matrix: matrixType, drawShapeWithCtx) => {
+const draw = (
+  matrix: matrixType,
+  drawShapeWithCtx: (x: number, y: number, obj: shapeObjType) => void
+) => {
   matrix.forEach((rows, verticalIndex) => {
     rows.forEach((shape, horizontalIndex) => {
       const x = horizontalIndex * settings.size[0];

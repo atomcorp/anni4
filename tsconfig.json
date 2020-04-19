@@ -4,6 +4,7 @@
     "module": "commonjs",
     "declaration": true,
     "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "noImplicitAny": true,
   }
 }
