@@ -1,0 +1,30 @@
+body, html {
+  font-family: 'Work Sans', sans-serif;
+}
+
+input, select {
+  font-family: inherit;
+}
+
+h1 {
+  text-align: center;
+}
+
+label {
+  display: block;
+}
+
+header {
+  margin: 0 0 20px;
+}
+
+.settings {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+canvas {
+  margin: 0 auto;
+  display: block;
+}

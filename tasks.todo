@@ -1,10 +1,14 @@
 PAINTINGS:
   ✔ TR II @done(20-03-11 20:12)
-  ☐ GRI
+  ✔ GRI @done(20-04-15 09:32)
+  ☐ Eclat
 
 NEXT:
   ✔ even out ups and downs @done(20-03-11 19:55)
     perhaps by switching x amount of downs to ups, and then smoothing the result
+  ☐ Put seed input and canvas options at the top, with title
+  ☐ Populate seed from search parameters
+  ☐ Responsiveness
     
 NOTES
   - https://christopherfarrcloth.com/designers/anni-albers/

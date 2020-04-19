@@ -4,36 +4,37 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Anni 4</title>
-    <style>
-      label {
-        display: block;
-      }
-    </style>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <canvas id="canvas" width="500" height="500"></canvas>
-    <div>
-      <label>Seed: </label>
-      <input id="seed" type="text" value="random seed" maxlength="16" />
-    </div>
-    <div>
-      <label>
-        <input type="radio" name="choice" value="simple" />
-        Right-angle triangles uniform
-      </label>
-      <label>
-        <input type="radio" name="choice" value="random" />
-        Random right-angle triangles
-      </label>
-      <label>
-        <input type="radio" name="choice" value="tr-II" />
-        TR II, 1970 - Vertical triangles (isocelene)
-      </label>
-      <label>
-        <input type="radio" name="choice" value="gr-II" />
-        GR II, 1970 - Vertical triangles (isocelene)
-      </label>
-    </div>
+    <header>
+      <h1>Anni Albers inspired generator</h1>
+      <div class="settings">
+        <div class="seed">
+          <label for="seed">Seed: </label>
+          <input id="seed" type="text" value="random seed" maxlength="16" />
+        </div>
+        &nbsp;
+        <div class="options">
+          <label for="options">Patterns</label>
+          <select name="options" id="options">
+            <option value="simple"> Right-angle triangles uniform</option>
+            <option value="random"> Random right-angle triangles</option>
+            <option value="tr-II">
+              TR II, 1970 - Vertical triangles (isocelene)</option
+            >
+            <option value="gr-II">
+              GR II, 1970 - Vertical triangles (isocelene)</option
+            >
+          </select>
+        </div>
+      </div>
+    </header>
+    <main><canvas id="canvas" width="500" height="500"></canvas></main>
     <script src="app.bundle.js" type="module"></script>
   </body>
 </html>

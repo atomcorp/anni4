@@ -12,6 +12,9 @@ const returnMatrix = (horizontalLength, verticalLength, callback) => {
 
 export default function() {
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+  canvas.width = 500;
+  canvas.height = 500;
+  canvas.style.backgroundColor = '';
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const SIZE = 50;
