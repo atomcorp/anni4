@@ -10,13 +10,13 @@ const params = () => {
 };
 
 type Options = {
-  [key: string]: () => void
+  [key: string]: (seed: string) => void
 }
 
 const setApp = () => {
   const state = {
     currentOption: "gr-II",
-    // seed: params.get(),
+    seed: 'seed',
   };
   const options: Options = {
     simple: simple,
@@ -26,15 +26,18 @@ const setApp = () => {
   };
   return {
     run: () => {
-      options[state.currentOption]();
+      options[state.currentOption](state.seed);
     },
-    change: (selected: string) => {
+    handleOption: (selected: string) => {
       if (state.currentOption !== selected) {
         console.log(selected, options)
         state.currentOption = selected;
-        options[selected]();
+        options[selected](state.seed);
       }
     },
+    handleInput: (string: string) => {
+      options[state.currentOption](state.seed);
+    }
   };
 };
 
@@ -43,8 +46,13 @@ const setApp = () => {
   app.run();
   const options = document.getElementById("options");
   options.addEventListener("change", (e) => {
-    const target = e.target as HTMLSelectElement;
+    const target = e.currentTarget as HTMLSelectElement;
     // seed here
-    app.change(target.value);
+    app.handleOption(target.value);
   });
+  const input = document.getElementById('seed');
+  input.addEventListener('input', (e) => {
+    const target = e.currentTarget as HTMLInputElement;
+    app.handleInput(target.value);
+  })
 })();

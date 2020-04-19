@@ -1,6 +1,10 @@
 import returnSeed from "./helpers/returnSeed";
 
-const returnMatrix = (horizontalLength, verticalLength, callback) => {
+const returnMatrix = (
+  horizontalLength: number,
+  verticalLength: number,
+  callback: (v: number, h: number) => void
+) => {
   Array(verticalLength)
     .fill(null)
     .forEach((_, verticalIndex) => {
@@ -12,13 +16,16 @@ const returnMatrix = (horizontalLength, verticalLength, callback) => {
     });
 };
 
-export default function() {
+export default function (seedString: string) {
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+  canvas.width = 500;
+  canvas.height = 500;
+  canvas.style.backgroundColor = "";
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const SIZE = 50;
   const grid = [10, 10];
-  const seed = returnSeed();
+  const seed = returnSeed(seedString);
   const drawTriangle = (x: number, y: number) => {
     ctx.beginPath();
     const isInvert = Math.round(seed * parseInt(`${x}${y}`)) % 2 === 0;

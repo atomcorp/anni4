@@ -1,4 +1,8 @@
-const returnMatrix = (horizontalLength, verticalLength, callback) => {
+const returnMatrix = (
+  horizontalLength: number,
+  verticalLength: number,
+  callback: (x: number, y: number) => void
+) => {
   Array(verticalLength)
     .fill(null)
     .forEach((_, verticalIndex) => {
@@ -10,11 +14,11 @@ const returnMatrix = (horizontalLength, verticalLength, callback) => {
     });
 };
 
-export default function() {
+export default function (seedString: string) {
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
   canvas.width = 500;
   canvas.height = 500;
-  canvas.style.backgroundColor = '';
+  canvas.style.backgroundColor = "";
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const SIZE = 50;
@@ -29,7 +33,11 @@ export default function() {
   };
 
   ctx.beginPath();
-  returnMatrix(grid[0], grid[1], (verticalIndex, horizontalIndex) => {
-    drawTriangle(verticalIndex * SIZE, horizontalIndex * SIZE);
-  });
+  returnMatrix(
+    grid[0],
+    grid[1],
+    (verticalIndex: number, horizontalIndex: number) => {
+      drawTriangle(verticalIndex * SIZE, horizontalIndex * SIZE);
+    }
+  );
 }

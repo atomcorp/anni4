@@ -910,6 +910,16 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-13.7.1.tgz#238eb34a66431b71d2aaddeaa7db166f25971a0d"
   integrity sha512-Zq8gcQGmn4txQEJeiXo/KiLpon8TzAl0kmKH4zdWctPj05nWwp1ClMdAVEloqrQKfaC48PNLdgN/aVaLqUrluA==
 
+"@types/seededshuffle@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@types/seededshuffle/-/seededshuffle-0.2.0.tgz#08cdb512a09147b8ba93af854590c05e413d5831"
+  integrity sha512-dafyQnxvDPxlnCdExnZ2gBeD2oioai/TWjl1XT+xFS1e2OFv6DbFcACnml3kOzUy/2YMugld4F/KLnpshvGy5A==
+
+"@types/seedrandom@^2.4.28":
+  version "2.4.28"
+  resolved "https://registry.yarnpkg.com/@types/seedrandom/-/seedrandom-2.4.28.tgz#9ce8fa048c1e8c85cb71d7fe4d704e000226036f"
+  integrity sha512-SMA+fUwULwK7sd/ZJicUztiPs8F1yCPwF3O23Z9uQ32ME5Ha0NmDK9+QTsYE4O2tHXChzXomSWWeIhCnoN1LqA==
+
 "@webassemblyjs/ast@1.9.0":
   version "1.9.0"
   resolved "https://registry.yarnpkg.com/@webassemblyjs/ast/-/ast-1.9.0.tgz#bd850604b4042459a5a41cd7d338cbed695ed964"

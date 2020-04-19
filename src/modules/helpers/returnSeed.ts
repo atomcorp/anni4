@@ -1,12 +1,11 @@
 import seedrandom from "seedrandom";
 
-const returnSeed = (): number => {
-  const input = document.getElementById("seed") as HTMLInputElement;
-  if (input.value.length > 3) {
-    const seed = new seedrandom(input.value);
+const returnSeed = (inputValue: string): number => {
+  if (inputValue.length > 3) {
+    const seed = seedrandom(inputValue);
     return seed();
   }
-  const seed = new seedrandom();
+  const seed = seedrandom();
   return seed();
 };
 

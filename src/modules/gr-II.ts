@@ -20,7 +20,7 @@ const N = "N";
 const E = "E";
 const S = "S";
 const W = "W";
-const seed = returnSeed();
+
 // settings
 const settings = {
   red: "#9b3b1b",
@@ -32,7 +32,8 @@ const settings = {
 const intFromSeed = (
   x: number, // int
   y: number,
-  maximum: number
+  maximum: number,
+  seed: number
 ) => {
   // this basically tries to make a predictable Math.random()
   const prng1 = ((parseInt(`${x * 33}${y * 84}`) * seed) % 100) / 100;
@@ -98,7 +99,8 @@ const drawChevrons = (
 const shapeType = (
   horizontalIndex: number,
   verticalIndex: number,
-  currentGrid: shapeType[][]
+  currentGrid: shapeType[][],
+  seed: number
 ) => {
   let availableShapes: shapeType[] = [N, E, S, W];
   const verts: shapeType[] = [N, S];
@@ -115,7 +117,7 @@ const shapeType = (
     availableShapes = verts.includes(aboveShape) ? horiz : verts;
   }
   return availableShapes[
-    intFromSeed(horizontalIndex, verticalIndex, availableShapes.length)
+    intFromSeed(horizontalIndex, verticalIndex, availableShapes.length, seed)
   ];
 };
 
@@ -146,12 +148,13 @@ const draw = (
   });
 };
 
-const init = () => {
+const init = (seedString: string) => {
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
   canvas.width = 800;
   canvas.height = 800;
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const seed = returnSeed(seedString);
   const drawShapeWithCtx = drawChevrons(
     ctx,
     settings.size[0],
@@ -166,10 +169,12 @@ const init = () => {
         Array(settings.grid[0])
           .fill(null)
           .reduce((cells, _, horizontalIndex) => {
-            const shape = shapeType(horizontalIndex, verticalIndex, [
-              ...rows,
-              cells,
-            ]);
+            const shape = shapeType(
+              horizontalIndex,
+              verticalIndex,
+              [...rows, cells],
+              seed
+            );
             return [...cells, shape];
           }, []),
       ];

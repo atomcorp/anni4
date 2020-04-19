@@ -87,7 +87,7 @@ const intFromSeed = (
   return Math.floor(((prng1 + prng2) / 2) * maximum);
 };
 
-const neighbourShapes = (matrix, horizontalIndex, verticalIndex) => {
+const neighbourShapes = (matrix: matrixType, horizontalIndex: number, verticalIndex: number) => {
   const previousShape: shapeObjType | null =
     horizontalIndex > 0 ? matrix[verticalIndex][horizontalIndex - 1] : null;
   const aboveNextShape: shapeObjType | null =
@@ -118,14 +118,14 @@ const neighbourShapes = (matrix, horizontalIndex, verticalIndex) => {
   };
 };
 
-export default function() {
+export default function(seedString: string) {
   const canvas = document.getElementById("canvas") as HTMLCanvasElement;
   canvas.width = 1000;
   canvas.height = 1000;
   canvas.style.backgroundColor = bkg;
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const seed = returnSeed();
+  const seed = returnSeed(seedString);
   const drawShapeWithCtx = drawShape(ctx);
   rank.up = 0;
   rank.down = 0;
