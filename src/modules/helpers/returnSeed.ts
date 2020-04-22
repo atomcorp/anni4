@@ -1,7 +1,7 @@
 import seedrandom from "seedrandom";
 
 const returnSeed = (inputValue: string): number => {
-  if (inputValue.length > 3) {
+  if (inputValue.length > 0) {
     const seed = seedrandom(inputValue);
     return seed();
   }

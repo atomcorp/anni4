@@ -3,9 +3,24 @@ import random from "./modules/random";
 import trII from "./modules/tr-II";
 import grII from "./modules/gr-II";
 
-const params = () => {
+type paramType = "pattern" | "seed";
+
+const setParams = () => {
+  const searchParams = new URLSearchParams(window.location.search);
   return {
-    get: () => {},
+    get: (type: paramType) => {
+      if (searchParams.has(type)) {
+        return decodeURIComponent(searchParams.get(type));
+      }
+      return null;
+    },
+    set: (type: paramType, value: string) => {
+      searchParams.set(type, encodeURIComponent(value));
+      window.history.replaceState(null, null, "?" + searchParams.toString());
+    },
+    share: () => {
+      return `${window.location}?${searchParams.toString()}`;
+    },
   };
 };
 
@@ -14,9 +29,10 @@ type Options = {
 };
 
 const setApp = () => {
+  const searchParams = setParams();
   const state = {
-    currentOption: "gr-II",
-    seed: "seed",
+    currentOption: "tr-II",
+    seed: "Anni A",
   };
   const options: Options = {
     simple: simple,
@@ -25,34 +41,51 @@ const setApp = () => {
     "gr-II": grII,
   };
   return {
-    run: () => {
-      options[state.currentOption](state.seed);
+    init: (inputEl: HTMLInputElement, optionsEl: HTMLSelectElement) => {
+      if (searchParams.get("seed")) {
+        inputEl.value = decodeURIComponent(searchParams.get("seed"));
+        state.seed = searchParams.get("seed");
+      } else {
+        searchParams.set("seed", state.seed);
+        inputEl.value = state.seed;
+      }
+      if (searchParams.get("pattern")) {
+        optionsEl.value = searchParams.get("pattern");
+        options[searchParams.get("pattern")](state.seed);
+        state.currentOption = searchParams.get("pattern");
+      } else {
+        options[state.currentOption](state.seed);
+        optionsEl.value = state.currentOption;
+        searchParams.set("pattern", state.currentOption);
+      }
     },
     handleOption: (selected: string) => {
       if (state.currentOption !== selected) {
         state.currentOption = selected;
         options[selected](state.seed);
+        searchParams.set("pattern", selected);
       }
     },
     handleInput: (string: string) => {
       state.seed = string;
       options[state.currentOption](state.seed);
+      searchParams.set("seed", string);
     },
   };
 };
 
 (() => {
   const app = setApp();
-  app.run();
-  const options = document.getElementById("options");
+  const options = document.getElementById("options") as HTMLSelectElement;
   options.addEventListener("change", (e) => {
     const target = e.currentTarget as HTMLSelectElement;
     // seed here
     app.handleOption(target.value);
   });
-  const input = document.getElementById("seed");
+  const input = document.getElementById("seed") as HTMLInputElement;
   input.addEventListener("input", (e) => {
     const target = e.currentTarget as HTMLInputElement;
     app.handleInput(target.value);
   });
+  app.init(input, options);
 })();
