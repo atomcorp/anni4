@@ -1,4 +1,6 @@
 const path = require("path");
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+const HtmlWebpackTagsPlugin = require('html-webpack-tags-plugin');
 
 module.exports = {
   mode: "development",
@@ -19,5 +21,12 @@ module.exports = {
         loader: "babel-loader"
       }
     ]
-  }
+  },
+  plugins: [
+    // this creates 
+    new HtmlWebpackPlugin({
+      template: 'src/html/index.html',
+    }),
+    new HtmlWebpackTagsPlugin({ tags: ['src/css/style.css'], append: true })
+  ]
 };

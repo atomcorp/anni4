@@ -1,4 +1,7 @@
 const path = require("path");
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+const HtmlWebpackTagsPlugin = require('html-webpack-tags-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   mode: "production",
@@ -19,5 +22,14 @@ module.exports = {
         loader: "babel-loader"
       }
     ]
-  }
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: 'src/html/index.html',
+    }),
+    new HtmlWebpackTagsPlugin({ tags: ['src/css/style.css'], append: true }),
+    new CopyPlugin([
+      { from: 'src/css/style.css', to: 'style.css' },
+    ]),
+  ]
 };
