@@ -6,11 +6,12 @@
   "scripts": {
     "type-check": "tsc --noEmit",
     "type-check:watch": "npm run type-check -- --watch",
-    "build": "npm run build:types && npm run build:js",
-    "build:types": "tsc --emitDeclarationOnly",
-    "build:js": "babel src --out-dir lib --extensions \".ts,.tsx\" --source-maps inline",
+    "buildlib": "npm run build:types && npm run build:js",
+    "buildlib:types": "tsc --emitDeclarationOnly",
+    "buildlib:js": "babel src --out-dir lib --extensions \".ts,.tsx\" --source-maps inline",
     "bundle": "webpack --mode=development",
-    "start": "webpack-dev-server --open"
+    "start": "webpack-dev-server --open",
+    "build": "webpack --config webpack.production.config.js"
   },
   "author": "",
   "license": "ISC",

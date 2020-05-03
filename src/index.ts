@@ -2,6 +2,7 @@ import simple from "./modules/simple";
 import random from "./modules/random";
 import trII from "./modules/tr-II";
 import grII from "./modules/gr-II";
+import smII from "./modules/second-movement-ii";
 
 type paramType = "pattern" | "seed";
 
@@ -39,6 +40,7 @@ const setApp = () => {
     random: random,
     "tr-II": trII,
     "gr-II": grII,
+    "sm-ii": smII,
   };
   return {
     init: (inputEl: HTMLInputElement, optionsEl: HTMLSelectElement) => {
