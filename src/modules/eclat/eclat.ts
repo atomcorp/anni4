@@ -21,6 +21,7 @@ type shapeType = NW | NE | SE | SW;
 type shapeObjType = {
   type: shapeType;
   color?: string;
+  isBlocked: boolean;
 };
 type matrixType = shapeObjType[][];
 type settings = {
@@ -187,23 +188,27 @@ const marry = (seed: number) => (
       // if married by conflicted, try and find alternative
       const isMarried = getIsMarried(shape.type, neighbour);
       const isInConflict = getIsInConflict(shape.type, neighbour);
-      if (horizontalIndex === 0 && verticalIndex === 13) {
-        console.log(
-          isMarried,
-          isInConflict,
-          neighbour,
-          getEligibleShapes(shape.type, neighbour, force)
-        );
-        mutatableMatrix[verticalIndex][horizontalIndex].color = "red";
-      }
+      // if (horizontalIndex === 0 && verticalIndex === 1) {
+      //   console.log(
+      //     isMarried,
+      //     isInConflict,
+      //     neighbour,
+      //     getEligibleShapes(shape.type, neighbour, force)
+      //   );
+      //   mutatableMatrix[verticalIndex][horizontalIndex].color = "red";
+      // }
       if (!isMarried || (isMarried && isInConflict)) {
         eligibleShapes = getEligibleShapes(shape.type, neighbour, force);
+      }
+      if (isInConflict && eligibleShapes.length < 1) {
+        mutatableMatrix[verticalIndex][horizontalIndex].isBlocked = true;
       }
       if (eligibleShapes.length > 0) {
         mutatableMatrix[verticalIndex][horizontalIndex].type =
           eligibleShapes[
             prng(horizontalIndex, verticalIndex, eligibleShapes.length, seed)
           ];
+        mutatableMatrix[verticalIndex][horizontalIndex].isBlocked = false;
       } else {
         // mutatableMatrix[verticalIndex][horizontalIndex].color = "red";
       }
@@ -269,6 +274,7 @@ export default (seedString: string) => {
               {
                 type: shape,
                 color: "rgb(243, 204, 9)",
+                isBlocked: false,
               },
             ];
           }, []),

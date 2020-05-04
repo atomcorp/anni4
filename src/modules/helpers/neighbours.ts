@@ -1,7 +1,7 @@
-
 type shapeObjType = {
   type: string;
   color?: string;
+  isBlocked?: boolean;
 };
 type matrixType = shapeObjType[][];
 export type neighbourType = {
@@ -11,9 +11,13 @@ export type neighbourType = {
   south: shapeObjType;
   southEast: shapeObjType;
   east: shapeObjType;
-}
+};
 
-const neighbours = (gridWidth: number, gridHeight: number) => (matrix: matrixType, horizontalIndex: number, verticalIndex: number) => {
+const neighbours = (gridWidth: number, gridHeight: number) => (
+  matrix: matrixType,
+  horizontalIndex: number,
+  verticalIndex: number
+) => {
   const west: shapeObjType | null =
     horizontalIndex > 0 ? matrix[verticalIndex][horizontalIndex - 1] : null;
   const northEast: shapeObjType | null =
@@ -40,7 +44,7 @@ const neighbours = (gridWidth: number, gridHeight: number) => (matrix: matrixTyp
     north,
     south,
     southEast,
-    east
+    east,
   };
 };
 
