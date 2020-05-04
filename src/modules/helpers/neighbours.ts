@@ -4,6 +4,14 @@ type shapeObjType = {
   color?: string;
 };
 type matrixType = shapeObjType[][];
+export type neighbourType = {
+  west: shapeObjType;
+  northEast: shapeObjType;
+  north: shapeObjType;
+  south: shapeObjType;
+  southEast: shapeObjType;
+  east: shapeObjType;
+}
 
 const neighbours = (gridWidth: number, gridHeight: number) => (matrix: matrixType, horizontalIndex: number, verticalIndex: number) => {
   const west: shapeObjType | null =
