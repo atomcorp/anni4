@@ -11,7 +11,9 @@
     "buildlib:js": "babel src --out-dir lib --extensions \".ts,.tsx\" --source-maps inline",
     "bundle": "webpack --mode=development",
     "start": "webpack-dev-server --open",
-    "build": "webpack --config webpack.production.config.js"
+    "build": "webpack --config webpack.production.config.js",
+    "deploy": "gh-pages -d dist",
+    "predeploy": "yarn build"
   },
   "author": "",
   "license": "ISC",
@@ -25,6 +27,7 @@
     "@types/seedrandom": "^2.4.28",
     "babel-loader": "^8.1.0",
     "copy-webpack-plugin": "^5.1.1",
+    "gh-pages": "^2.2.0",
     "html-webpack-plugin": "^4.3.0",
     "html-webpack-tags-plugin": "^2.0.17",
     "seededshuffle": "^0.2.0",
