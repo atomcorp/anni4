@@ -10,5 +10,6 @@ NEXT:
   ☐ Populate seed from search parameters
   ☐ Responsiveness
     
-NOTES
+Also
   - https://christopherfarrcloth.com/designers/anni-albers/
+  - work out sizes => canvas width / grid width = cell width
