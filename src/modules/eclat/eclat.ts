@@ -83,40 +83,95 @@ const getIsMarried = (shape: shapeType, neighbour: neighbourType) => {
 
 const getIsInConflict = (shape: shapeType, neighbour: neighbourType) => {
   const { NW, NE, SE, SW } = settings.shapes;
-  if (shape === NW && neighbour.north?.type === SE) {
+  if (
+    shape === NW &&
+    (neighbour.north?.type === SW || neighbour.west?.type === NE)
+  ) {
     return true;
   }
+  if (
+    shape === NE &&
+    (neighbour.north?.type === SE || neighbour.east?.type === NW)
+  ) {
+    return true;
+  }
+  if (
+    shape === SE &&
+    (neighbour.south?.type === NE || neighbour.east?.type === SW)
+  ) {
+    return true;
+  }
+  if (
+    shape === SW &&
+    (neighbour.south?.type === NW || neighbour.east?.type === SE)
+  ) {
+    return true;
+  }
+  return false;
 };
 
-const getEligibleShapes = (shape: shapeType, neighbour: neighbourType) => {
+const getEligibleShapes = (
+  shape: shapeType,
+  neighbour: neighbourType,
+  force?: boolean
+) => {
   const { NW, NE, SE, SW } = settings.shapes;
   let allowedShapes = [] as shapeType[];
   let disallowedShapes = [] as shapeType[];
   if (neighbour.north?.type === SW || neighbour.east?.type === SW) {
     allowedShapes.push(NE);
-    // disallowedShapes.push(NW, SE);
+    if (
+      !force &&
+      (neighbour.west?.type !== SE || neighbour.south?.type !== NW)
+    ) {
+      allowedShapes.push(SW);
+    }
+    disallowedShapes.push(NW, SE);
   }
   if (neighbour.north?.type === SE || neighbour.west?.type === SE) {
     allowedShapes.push(NW);
-    // disallowedShapes.push(NE, SW);
+    if (
+      !force &&
+      (neighbour.east?.type !== SW || neighbour.south?.type !== NE)
+    ) {
+      allowedShapes.push(SE);
+    }
+    disallowedShapes.push(NE, SW);
   }
   if (neighbour.south?.type === NW || neighbour.east?.type === NW) {
     allowedShapes.push(SE);
-    // disallowedShapes.push(NE, SW);
+    if (
+      !force &&
+      (neighbour.north?.type !== SW || neighbour.west?.type !== NE)
+    ) {
+      allowedShapes.push(NW);
+    }
+    disallowedShapes.push(SW, NE);
   }
   if (neighbour.south?.type === NE || neighbour.west?.type === NE) {
     allowedShapes.push(SW);
-    // disallowedShapes.push(NE, SW);
+    if (
+      !force &&
+      (neighbour.north?.type !== SE || neighbour.east?.type !== NW)
+    ) {
+      allowedShapes.push(NE);
+    }
+    disallowedShapes.push(SE, NW);
   }
-  return allowedShapes.filter((shape) => !disallowedShapes.includes(shape));
+  return allowedShapes.filter(
+    (allowedShape) => !disallowedShapes.includes(allowedShape)
+  );
 };
 
 /**
  * try and find a matching shape
  */
-const marry = (seed: number) => (matrix: matrixType): matrixType => {
+const marry = (seed: number) => (
+  matrix: matrixType,
+  force?: boolean
+): matrixType => {
   const { NW, NE, SE, SW } = settings.shapes;
-  const shapes = [NW, NE, SE, SW] as shapeType[];
+  const shapes = [] as shapeType[];
   const mutatableMatrix = matrix;
   const getNeighbour = neighbours(settings.grid[0], settings.grid[1]);
   matrix.forEach((row, verticalIndex) => {
@@ -127,9 +182,23 @@ const marry = (seed: number) => (matrix: matrixType): matrixType => {
         horizontalIndex,
         verticalIndex
       );
+      // check is married and not in conflict, if OK leave alone
+      // if not married try and find not conflicted marriage
+      // if married by conflicted, try and find alternative
       const isMarried = getIsMarried(shape.type, neighbour);
-      eligibleShapes = [...shapes, ...getEligibleShapes(shape.type, neighbour)];
-
+      const isInConflict = getIsInConflict(shape.type, neighbour);
+      if (horizontalIndex === 0 && verticalIndex === 13) {
+        console.log(
+          isMarried,
+          isInConflict,
+          neighbour,
+          getEligibleShapes(shape.type, neighbour, force)
+        );
+        mutatableMatrix[verticalIndex][horizontalIndex].color = "red";
+      }
+      if (!isMarried || (isMarried && isInConflict)) {
+        eligibleShapes = getEligibleShapes(shape.type, neighbour, force);
+      }
       if (eligibleShapes.length > 0) {
         mutatableMatrix[verticalIndex][horizontalIndex].type =
           eligibleShapes[
@@ -137,71 +206,6 @@ const marry = (seed: number) => (matrix: matrixType): matrixType => {
           ];
       } else {
         // mutatableMatrix[verticalIndex][horizontalIndex].color = "red";
-      }
-    });
-  });
-  return mutatableMatrix;
-};
-
-const smooth = (seed: number) => (matrix: matrixType): matrixType => {
-  /**
-   * Using mutation here is much mre simple and readable than using reduce etc
-   * When using the neighbours function we need the latest version of the matrix,
-   * and the only way functionally would be to splice
-   */
-  const { NW, NE, SE, SW } = settings.shapes;
-  const shapes = [NW, NE, SE, SW] as shapeType[];
-  const mutatableMatrix = matrix;
-  const getNeighbour = neighbours(settings.grid[0], settings.grid[1]);
-  matrix.forEach((row, verticalIndex) => {
-    row.forEach((shape: shapeObjType, horizontalIndex: number) => {
-      let availableShapes = shapes;
-      const neighbour = getNeighbour(
-        mutatableMatrix,
-        horizontalIndex,
-        verticalIndex
-      );
-      /**
-       * North
-       */
-      if (neighbour.north?.type === SE) {
-        availableShapes = availableShapes.filter((shape) => shape !== NE);
-      }
-      if (neighbour.north?.type === SW) {
-        availableShapes = availableShapes.filter((shape) => shape !== NW);
-      }
-      /**
-       * East
-       */
-      if (neighbour.east?.type === NW) {
-        availableShapes = availableShapes.filter((shape) => shape !== NE);
-      }
-      if (neighbour.east?.type === SW) {
-        availableShapes = availableShapes.filter((shape) => shape !== SE);
-      }
-      if (neighbour.east?.type === NE) {
-        availableShapes = availableShapes.filter((shape) => shape !== NW);
-      }
-      /**
-       * South
-       */
-      if (neighbour.south?.type === NW) {
-        availableShapes = availableShapes.filter((shape) => shape !== SW);
-      }
-      if (neighbour.south?.type === NE) {
-        availableShapes = availableShapes.filter((shape) => shape !== NE);
-      }
-      /**
-       * West
-       */
-      if (availableShapes.length < 4) {
-        mutatableMatrix[verticalIndex][horizontalIndex].type =
-          availableShapes[
-            prng(horizontalIndex, verticalIndex, availableShapes.length, seed)
-          ];
-      }
-      if (availableShapes.length === 0) {
-        console.log("no shapes");
       }
     });
   });
@@ -271,16 +275,16 @@ export default (seedString: string) => {
       ];
     }, []);
   const marryMatrix = marry(seed);
-  const smoothMatrix = smooth(seed);
-  const newMatrix = marryMatrix(matrix);
-  marryMatrix(matrix).forEach((rows, verticalIndex) => {
-    rows.forEach((shape, horizontalIndex) => {
-      const x = horizontalIndex * settings.size[0];
-      const y = verticalIndex * settings.size[1];
-      log.add(shape);
-      // draw the shape on canvas
-      drawShapeWithCtx(x, y, shape);
-    });
-  });
+  marryMatrix(marryMatrix(marryMatrix(marryMatrix(matrix))), true).forEach(
+    (rows, verticalIndex) => {
+      rows.forEach((shape, horizontalIndex) => {
+        const x = horizontalIndex * settings.size[0];
+        const y = verticalIndex * settings.size[1];
+        log.add(shape);
+        // draw the shape on canvas
+        drawShapeWithCtx(x, y, shape);
+      });
+    }
+  );
   log.show();
 };
