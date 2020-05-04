@@ -34,7 +34,7 @@ const setApp = () => {
   const searchParams = setParams();
   const state = {
     currentOption: "tr-II",
-    seed: "Anni A",
+    seed: "Anni Albers",
   };
   const options: Options = {
     simple: simple,
